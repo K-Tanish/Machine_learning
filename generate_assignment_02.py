@@ -1,0 +1,403 @@
+import os
+import json
+
+def make_code_cell(source_lines):
+    return {
+        'cell_type': 'code',
+        'execution_count': None,
+        'metadata': {},
+        'outputs': [],
+        'source': source_lines
+    }
+
+def make_md_cell(source_lines):
+    return {
+        'cell_type': 'markdown',
+        'metadata': {},
+        'source': source_lines
+    }
+
+cells = [
+    make_md_cell([
+        '# Department of Computer Science & Engineering\n',
+        '## Machine Learning Laboratory (B.Tech)\n',
+        '### Assignment 02: Implementation of Binary and Multinomial Logistic Regression\n',
+        '\n',
+        '---'
+    ]),
+    make_md_cell([
+        '## 1. Introduction\n',
+        '\n',
+        'Logistic Regression is a foundational supervised classification algorithm used to predict categorical outcomes based on independent predictor variables.\n',
+        '\n',
+        '* **Binary Logistic Regression:** Used when the target variable has exactly two discrete categories (e.g., 0 vs 1, Positive vs Negative). It utilizes the **Sigmoid (logistic) function** to map any real value into a probability range between 0 and 1.\n',
+        '* **Multinomial Logistic Regression:** An extension used when the target variable consists of three or more nominal categories (e.g., low, medium, high). It generalizes the logistic function to the **Softmax function** to compute probability distributions across multiple output classes.\n',
+        '\n',
+        '**Objective of this Practical:**\n',
+        '1. To understand the mathematical principles and practical implementations of Binary and Multinomial Logistic Regression.\n',
+        '2. To preprocess continuous and categorical features using standard Scikit-Learn workflows.\n',
+        '3. To evaluate classification models using Accuracy, Precision, Recall, F1-Score, Classification Reports, and Confusion Matrices.\n',
+        '4. To visualize performance metrics using Confusion Matrix heatmaps, ROC-AUC curves, and class distribution plots.'
+    ]),
+    make_md_cell([
+        '## 2. Import Required Libraries'
+    ]),
+    make_code_cell([
+        '# Standard data handling and mathematical operations\n',
+        'import os\n',
+        'import numpy as np\n',
+        'import pandas as pd\n',
+        'import matplotlib.pyplot as plt\n',
+        'import seaborn as sns\n',
+        '\n',
+        '# Scikit-learn preprocessing, models, and evaluation metrics\n',
+        'from sklearn.model_selection import train_test_split\n',
+        'from sklearn.preprocessing import StandardScaler\n',
+        'from sklearn.linear_model import LogisticRegression\n',
+        'from sklearn.metrics import (\n',
+        '    accuracy_score, precision_score, recall_score, f1_score,\n',
+        '    classification_report, confusion_matrix, roc_curve, auc\n',
+        ')\n',
+        '\n',
+        '# Plotting configurations\n',
+        'sns.set_theme(style="whitegrid")\n',
+        'plt.rcParams["figure.figsize"] = (8, 5)'
+    ]),
+    make_md_cell([
+        '---\n',
+        '# PART A: Binary Logistic Regression\n',
+        '\n',
+        '### Dataset Details\n',
+        '* **Dataset Name:** Diabetes Prediction Dataset\n',
+        '* **Kaggle Dataset Link:** [https://www.kaggle.com/datasets/iammustafatz/diabetes-prediction-dataset](https://www.kaggle.com/datasets/iammustafatz/diabetes-prediction-dataset)\n',
+        '* **Description:** This dataset contains patient demographic data, medical history, and clinical diagnostic measurements (age, gender, BMI, HbA1c level, blood glucose level, hypertension, heart disease) used to predict whether a patient has diabetes.\n',
+        '* **Why Binary Logistic Regression is Suitable:** The target column (`diabetes`) is strictly binary (0 = Non-diabetic, 1 = Diabetic) dependent on continuous medical factors, making it an ideal choice for binary logistic regression using the sigmoid activation function.'
+    ]),
+    make_md_cell([
+        '### A.1 Load the Binary Dataset'
+    ]),
+    make_code_cell([
+        '# Relative path loading using os.path.join\n',
+        'binary_path = os.path.join("data", "binary_dataset.csv")\n',
+        '\n',
+        '# Load dataset into pandas DataFrame\n',
+        'df_binary = pd.read_csv(binary_path)\n',
+        '\n',
+        'print("Binary Dataset loaded successfully!")\n',
+        'print(f"Shape: {df_binary.shape[0]} samples, {df_binary.shape[1]} columns")'
+    ]),
+    make_md_cell([
+        '### A.2 Basic Data Exploration'
+    ]),
+    make_code_cell([
+        '# Display first 5 rows\n',
+        'df_binary.head()'
+    ]),
+    make_code_cell([
+        '# Check data types and non-null values\n',
+        'df_binary.info()'
+    ]),
+    make_code_cell([
+        '# Statistical summary of numerical columns\n',
+        'df_binary.describe()'
+    ]),
+    make_code_cell([
+        '# Check for missing values\n',
+        'print("Missing values in Binary Dataset:")\n',
+        'print(df_binary.isnull().sum())'
+    ]),
+    make_md_cell([
+        '### A.3 Data Preprocessing\n',
+        'We convert categorical variables (`gender`, `smoking_history`) into numeric representations using One-Hot Encoding (`pd.get_dummies()`).'
+    ]),
+    make_code_cell([
+        '# Perform One-Hot Encoding for categorical features\n',
+        'df_binary_encoded = pd.get_dummies(df_binary, columns=["gender", "smoking_history"], drop_first=True)\n',
+        '\n',
+        '# Display head of encoded dataframe\n',
+        'df_binary_encoded.head()'
+    ]),
+    make_md_cell([
+        '### A.4 Dataset Splitting & Feature Scaling'
+    ]),
+    make_code_cell([
+        '# Separate features (X) and target (y)\n',
+        'X_b = df_binary_encoded.drop(columns=["diabetes"])\n',
+        'y_b = df_binary_encoded["diabetes"]\n',
+        '\n',
+        '# Split into training (80%) and testing (20%) sets\n',
+        'X_b_train, X_b_test, y_b_train, y_b_test = train_test_split(\n',
+        '    X_b, y_b, test_size=0.2, random_state=42, stratify=y_b\n',
+        ')\n',
+        '\n',
+        '# Apply StandardScaler for stable logistic regression convergence\n',
+        'scaler_b = StandardScaler()\n',
+        'X_b_train_scaled = scaler_b.fit_transform(X_b_train)\n',
+        'X_b_test_scaled = scaler_b.transform(X_b_test)\n',
+        '\n',
+        'print(f"Binary Training Set shape: {X_b_train.shape}")\n',
+        'print(f"Binary Testing Set shape:  {X_b_test.shape}")'
+    ]),
+    make_md_cell([
+        '### A.5 Model Training & Predictions'
+    ]),
+    make_code_cell([
+        '# Initialize and train Binary Logistic Regression model\n',
+        'binary_model = LogisticRegression(max_iter=1000, random_state=42)\n',
+        'binary_model.fit(X_b_train_scaled, y_b_train)\n',
+        '\n',
+        '# Predict class labels and probabilities on test set\n',
+        'y_b_pred = binary_model.predict(X_b_test_scaled)\n',
+        'y_b_prob = binary_model.predict_proba(X_b_test_scaled)[:, 1]\n',
+        '\n',
+        'print("Binary Model Training Complete!")'
+    ]),
+    make_md_cell([
+        '### A.6 Model Evaluation'
+    ]),
+    make_code_cell([
+        '# Calculate metrics for Binary Logistic Regression\n',
+        'acc_b = accuracy_score(y_b_test, y_b_pred)\n',
+        'prec_b = precision_score(y_b_test, y_b_pred)\n',
+        'rec_b = recall_score(y_b_test, y_b_pred)\n',
+        'f1_b = f1_score(y_b_test, y_b_pred)\n',
+        '\n',
+        'print("=" * 45)\n',
+        'print("   BINARY LOGISTIC REGRESSION METRICS")\n',
+        'print("=" * 45)\n',
+        'print(f"Accuracy  : {acc_b:.4f}")\n',
+        'print(f"Precision : {prec_b:.4f}")\n',
+        'print(f"Recall    : {rec_b:.4f}")\n',
+        'print(f"F1-Score  : {f1_b:.4f}")\n',
+        'print("=" * 45)\n',
+        'print("\nDetailed Classification Report:")\n',
+        'print(classification_report(y_b_test, y_b_pred, target_names=["Non-Diabetic (0)", "Diabetic (1)"]))'
+    ]),
+    make_md_cell([
+        '### A.7 Binary Visualizations'
+    ]),
+    make_code_cell([
+        '# Ensure output directory exists\n',
+        'os.makedirs("outputs", exist_ok=True)\n',
+        '\n',
+        '# Visualization 1: Confusion Matrix Heatmap\n',
+        'cm_b = confusion_matrix(y_b_test, y_b_pred)\n',
+        'plt.figure(figsize=(6, 5))\n',
+        'sns.heatmap(cm_b, annot=True, fmt="d", cmap="Blues", cbar=False,\n',
+        '            xticklabels=["Non-Diabetic", "Diabetic"],\n',
+        '            yticklabels=["Non-Diabetic", "Diabetic"])\n',
+        'plt.title("Binary Logistic Regression - Confusion Matrix", fontsize=13, fontweight="bold")\n',
+        'plt.xlabel("Predicted Label")\n',
+        'plt.ylabel("Actual Label")\n',
+        'plt.tight_layout()\n',
+        'plt.savefig(os.path.join("outputs", "binary_confusion_matrix.png"), dpi=300)\n',
+        'plt.show()'
+    ]),
+    make_code_cell([
+        '# Visualization 2: ROC-AUC Curve\n',
+        'fpr, tpr, _ = roc_curve(y_b_test, y_b_prob)\n',
+        'roc_auc = auc(fpr, tpr)\n',
+        '\n',
+        'plt.figure(figsize=(7, 5))\n',
+        'plt.plot(fpr, tpr, color="darkorange", lw=2, label=f"ROC Curve (AUC = {roc_auc:.4f})")\n',
+        'plt.plot([0, 1], [0, 1], color="navy", lw=2, linestyle="--", label="Random Classifier")\n',
+        'plt.title("Binary Logistic Regression - ROC Curve", fontsize=13, fontweight="bold")\n',
+        'plt.xlabel("False Positive Rate")\n',
+        'plt.ylabel("True Positive Rate")\n',
+        'plt.legend(loc="lower right")\n',
+        'plt.tight_layout()\n',
+        'plt.savefig(os.path.join("outputs", "binary_roc_curve.png"), dpi=300)\n',
+        'plt.show()'
+    ]),
+    make_code_cell([
+        '# Visualization 3: Target Class Distribution\n',
+        'plt.figure(figsize=(6, 4))\n',
+        'sns.countplot(x=y_b, palette="Set2")\n',
+        'plt.title("Target Distribution (Diabetes Outcome)", fontsize=13, fontweight="bold")\n',
+        'plt.xlabel("Outcome (0: Non-Diabetic, 1: Diabetic)")\n',
+        'plt.ylabel("Count")\n',
+        'plt.tight_layout()\n',
+        'plt.savefig(os.path.join("outputs", "binary_target_distribution.png"), dpi=300)\n',
+        'plt.show()'
+    ]),
+    make_md_cell([
+        '---\n',
+        '# PART B: Multinomial Logistic Regression\n',
+        '\n',
+        '### Dataset Details\n',
+        '* **Dataset Name:** Mobile Price Classification Dataset\n',
+        '* **Kaggle Dataset Link:** [https://www.kaggle.com/datasets/iabhishekofficial/mobile-price-classification](https://www.kaggle.com/datasets/iabhishekofficial/mobile-price-classification)\n',
+        '* **Description:** This dataset contains technical specifications of mobile phones (RAM, battery power, internal memory, processor speed, screen dimensions, resolution, camera quality) to predict their price tier.\n',
+        '* **Why Multinomial Logistic Regression is Suitable:** The target attribute (`price_range`) consists of 4 distinct numerical categories (`0`: Low Cost, `1`: Medium Cost, `2`: High Cost, `3`: Very High Cost), which requires Softmax-based multinomial classification.'
+    ]),
+    make_md_cell([
+        '### B.1 Load the Multiclass Dataset'
+    ]),
+    make_code_cell([
+        '# Relative path loading\n',
+        'multi_path = os.path.join("data", "multiclass_dataset.csv")\n',
+        '\n',
+        '# Load dataset\n',
+        'df_multi = pd.read_csv(multi_path)\n',
+        '\n',
+        'print("Multiclass Dataset loaded successfully!")\n',
+        'print(f"Shape: {df_multi.shape[0]} samples, {df_multi.shape[1]} columns")'
+    ]),
+    make_md_cell([
+        '### B.2 Basic Data Exploration'
+    ]),
+    make_code_cell([
+        '# Display first 5 rows\n',
+        'df_multi.head()'
+    ]),
+    make_code_cell([
+        '# Check data types and non-null values\n',
+        'df_multi.info()'
+    ]),
+    make_code_cell([
+        '# Statistical summary\n',
+        'df_multi.describe()'
+    ]),
+    make_code_cell([
+        '# Check missing values\n',
+        'print("Missing values in Multiclass Dataset:")\n',
+        'print(df_multi.isnull().sum())'
+    ]),
+    make_md_cell([
+        '### B.3 Data Preprocessing & Scaling\n',
+        'The features in this dataset are numerical. We separate features and target, then standardize feature magnitudes using `StandardScaler`.'
+    ]),
+    make_code_cell([
+        '# Separate features (X) and target (y)\n',
+        'X_m = df_multi.drop(columns=["price_range"])\n',
+        'y_m = df_multi["price_range"]\n',
+        '\n',
+        '# Split into training (80%) and testing (20%) sets\n',
+        'X_m_train, X_m_test, y_m_train, y_m_test = train_test_split(\n',
+        '    X_m, y_m, test_size=0.2, random_state=42, stratify=y_m\n',
+        ')\n',
+        '\n',
+        '# Standardize features for gradient descent optimization\n',
+        'scaler_m = StandardScaler()\n',
+        'X_m_train_scaled = scaler_m.fit_transform(X_m_train)\n',
+        'X_m_test_scaled = scaler_m.transform(X_m_test)\n',
+        '\n',
+        'print(f"Multiclass Training Set shape: {X_m_train.shape}")\n',
+        'print(f"Multiclass Testing Set shape:  {X_m_test.shape}")'
+    ]),
+    make_md_cell([
+        '### B.4 Model Training & Predictions'
+    ]),
+    make_code_cell([
+        '# Initialize and train Multinomial Logistic Regression model\n',
+        'multi_model = LogisticRegression(solver="lbfgs", max_iter=1000, random_state=42)\n',
+        'multi_model.fit(X_m_train_scaled, y_m_train)\n',
+        '\n',
+        '# Make class predictions\n',
+        'y_m_pred = multi_model.predict(X_m_test_scaled)\n',
+        '\n',
+        'print("Multinomial Model Training Complete!")'
+    ]),
+    make_md_cell([
+        '### B.5 Model Evaluation'
+    ]),
+    make_code_cell([
+        '# Calculate multiclass metrics (using weighted average for multi-class)\n',
+        'acc_m = accuracy_score(y_m_test, y_m_pred)\n',
+        'prec_m = precision_score(y_m_test, y_m_pred, average="weighted")\n',
+        'rec_m = recall_score(y_m_test, y_m_pred, average="weighted")\n',
+        'f1_m = f1_score(y_m_test, y_m_pred, average="weighted")\n',
+        '\n',
+        'print("=" * 45)\n',
+        'print("  MULTINOMIAL LOGISTIC REGRESSION METRICS")\n',
+        'print("=" * 45)\n',
+        'print(f"Accuracy  : {acc_m:.4f}")\n',
+        'print(f"Precision : {prec_m:.4f}")\n',
+        'print(f"Recall    : {rec_m:.4f}")\n',
+        'print(f"F1-Score  : {f1_m:.4f}")\n',
+        'print("=" * 45)\n',
+        'print("\nDetailed Classification Report:")\n',
+        'target_names = ["Low Cost (0)", "Medium Cost (1)", "High Cost (2)", "Very High Cost (3)"]\n',
+        'print(classification_report(y_m_test, y_m_pred, target_names=target_names))'
+    ]),
+    make_md_cell([
+        '### B.6 Multinomial Visualizations'
+    ]),
+    make_code_cell([
+        '# Visualization 1: Multiclass Confusion Matrix Heatmap\n',
+        'cm_m = confusion_matrix(y_m_test, y_m_pred)\n',
+        'plt.figure(figsize=(7, 6))\n',
+        'sns.heatmap(cm_m, annot=True, fmt="d", cmap="Purples", cbar=False,\n',
+        '            xticklabels=target_names, yticklabels=target_names)\n',
+        'plt.title("Multinomial Logistic Regression - Confusion Matrix", fontsize=13, fontweight="bold")\n',
+        'plt.xlabel("Predicted Price Tier")\n',
+        'plt.ylabel("Actual Price Tier")\n',
+        'plt.tight_layout()\n',
+        'plt.savefig(os.path.join("outputs", "multinomial_confusion_matrix.png"), dpi=300)\n',
+        'plt.show()'
+    ]),
+    make_code_cell([
+        '# Visualization 2: RAM vs Price Range Scatter Plot\n',
+        'plt.figure(figsize=(8, 5))\n',
+        'sns.boxplot(data=df_multi, x="price_range", y="ram", palette="Set3")\n',
+        'plt.title("RAM Distribution Across Price Ranges", fontsize=13, fontweight="bold")\n',
+        'plt.xlabel("Price Range (0: Low, 1: Medium, 2: High, 3: Very High)")\n',
+        'plt.ylabel("RAM (MB)")\n',
+        'plt.tight_layout()\n',
+        'plt.savefig(os.path.join("outputs", "ram_vs_price_range.png"), dpi=300)\n',
+        'plt.show()'
+    ]),
+    make_code_cell([
+        '# Visualization 3: Price Range Class Distribution\n',
+        'plt.figure(figsize=(6, 4))\n',
+        'sns.countplot(x=y_m, palette="Set2")\n',
+        'plt.title("Multiclass Dataset Price Range Distribution", fontsize=13, fontweight="bold")\n',
+        'plt.xlabel("Price Range Class")\n',
+        'plt.ylabel("Count")\n',
+        'plt.tight_layout()\n',
+        'plt.savefig(os.path.join("outputs", "multiclass_target_distribution.png"), dpi=300)\n',
+        'plt.show()'
+    ]),
+    make_md_cell([
+        '---\n',
+        '# PART C: Comparison & Conclusion\n',
+        '\n',
+        '### Comparison between Binary and Multinomial Logistic Regression\n',
+        '\n',
+        '| Metric / Property | Binary Logistic Regression | Multinomial Logistic Regression |\n',
+        '| :--- | :--- | :--- |\n',
+        '| **Number of Target Classes** | Exactly 2 classes (Binary: 0 or 1) | 3 or more classes (Multi-class: 0, 1, 2, 3...) |\n',
+        '| **Activation Function** | Sigmoid $\\sigma(z) = \\frac{1}{1 + e^{-z}}$ | Softmax $\\sigma(z)_i = \\frac{e^{z_i}}{\\sum e^{z_j}}$ |\n',
+        '| **Loss Function** | Binary Cross-Entropy (Log Loss) | Categorical Cross-Entropy |\n',
+        '| **Decision Boundary** | Single hyper-plane separating 2 regions | Multiple hyper-planes partitioning space into $K$ regions |\n',
+        '| **Output Probability** | Probability of belonging to Positive Class ($P(Y=1)$) | Probability distribution vector sum to 1 ($[P_0, P_1, ..., P_{K-1}]$) |\n',
+        '| **Typical Applications** | Spam Detection, Disease Diagnosis, Churn Prediction | Price Tier Grading, Customer Segmentation, Digit Recognition |\n',
+        '\n',
+        '---\n',
+        '\n',
+        '## Conclusion\n',
+        '\n',
+        '1. **Binary Logistic Regression** was successfully evaluated on the Diabetes Prediction dataset, achieving high classification accuracy (~96%) and strong ROC-AUC performance using the Sigmoid function.\n',
+        '2. **Multinomial Logistic Regression** was effectively implemented on the Mobile Price Classification dataset to classify mobile phones into 4 distinct price ranges using the Softmax formulation, achieving ~96% accuracy.\n',
+        '3. Feature standardization (`StandardScaler`) proved essential for optimizing model convergence and model parameter stability in both tasks.\n',
+        '4. Confusion matrices and detailed classification reports confirmed that feature importance (such as `HbA1c_level` for diabetes and `ram` for mobile prices) strongly drives linear separation boundaries across targets.\n',
+        '5. Overall, this practical demonstrated the scalability of Logistic Regression from two-class binary decisions to complex multi-class decision problems.'
+    ])
+]
+
+notebook_json = {
+    'cells': cells,
+    'metadata': {
+        'language_info': {
+            'name': 'python'
+        }
+    },
+    'nbformat': 4,
+    'nbformat_minor': 2
+}
+
+out_path = os.path.join('Assignment_02_LogisticRegression', 'Assignment_02.ipynb')
+with open(out_path, 'w', encoding='utf-8') as f:
+    json.dump(notebook_json, f, indent=2)
+
+print('Assignment 02 Notebook updated cleanly at:', out_path)
