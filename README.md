@@ -1,6 +1,6 @@
-# Machine Learning Laboratory Practicals (B.Tech CSE)
+# Machine Learning Lab Practicals
 
-This repository contains Machine Learning laboratory practical assignments implemented in Python using Jupyter Notebooks / Google Colab.
+This repository contains Machine Learning laboratory practical assignments implemented in Python using Google Colab.
 
 ---
 
