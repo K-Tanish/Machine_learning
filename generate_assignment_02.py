@@ -40,6 +40,24 @@ cells = [
         '4. To visualize performance metrics using Confusion Matrix heatmaps, ROC-AUC curves, and class distribution plots.'
     ]),
     make_md_cell([
+        '### Google Colab Drive Mount (Optional for Colab Users)'
+    ]),
+    make_code_cell([
+        '# Run this cell if running inside Google Colab to mount Drive and set directory\n',
+        'try:\n',
+        '    from google.colab import drive\n',
+        '    import os\n',
+        '\n',
+        '    # Mount Google Drive\n',
+        '    drive.mount(\'/content/drive\')\n',
+        '\n',
+        '    # Change working directory to your assignment folder\n',
+        '    os.chdir(\'/content/drive/MyDrive/ML/Assignment_02_LogisticRegression\')\n',
+        '    print("Current Working Directory:", os.getcwd())\n',
+        'except Exception as e:\n',
+        '    print("Not running in Colab or Drive already mounted:", e)'
+    ]),
+    make_md_cell([
         '## 2. Import Required Libraries'
     ]),
     make_code_cell([
@@ -385,19 +403,15 @@ cells = [
     ])
 ]
 
-notebook_json = {
+nb_02_json = {
     'cells': cells,
-    'metadata': {
-        'language_info': {
-            'name': 'python'
-        }
-    },
+    'metadata': {'language_info': {'name': 'python'}},
     'nbformat': 4,
     'nbformat_minor': 2
 }
 
-out_path = os.path.join('Assignment_02_LogisticRegression', 'Assignment_02.ipynb')
-with open(out_path, 'w', encoding='utf-8') as f:
-    json.dump(notebook_json, f, indent=2)
+out_path_02 = os.path.join('Assignment_02_LogisticRegression', 'Assignment_02.ipynb')
+with open(out_path_02, 'w', encoding='utf-8') as f:
+    json.dump(nb_02_json, f, indent=2)
 
-print('Assignment 02 Notebook updated cleanly at:', out_path)
+print('Assignment 02 updated with Colab drive mount code!')
